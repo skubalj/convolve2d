@@ -11,7 +11,7 @@ pub use crate::matrix::DynamicMatrix;
 mod convolution;
 #[cfg(feature = "image")]
 mod image_ext;
-pub mod kernels;
+pub mod kernel;
 mod matrix;
 
 pub use crate::convolution::convolve2d;

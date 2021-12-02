@@ -12,8 +12,8 @@ use std::prelude::v1::*;
 use std::vec;
 
 /// Perform a 2D convolution on the specified image with the provided kernel.
-/// 
-/// This function is a convient interface for the [`convolve2d`] function, which stores the 
+///
+/// This function is a convient interface for the [`convolve2d`] function, which stores the
 /// generated convolution in a new allocation.
 #[cfg(feature = "std")]
 pub fn get_convolution<T, K, O>(image: &impl Matrix<T>, kernel: &impl Matrix<K>) -> DynamicMatrix<O>
