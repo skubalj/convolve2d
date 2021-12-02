@@ -17,13 +17,19 @@ pub trait Matrix<T> {
     }
 }
 
+/// A subtype of [`Matrix`] allowing mutable access to the underlying data
+pub trait MatrixMut<T>: Matrix<T> {
+    /// Get a mutable slice to the underlying matrix data
+    fn get_data_mut(&mut self) -> &mut [T];
+}
+
 /// A wrapper around a matrix that flips the values in `get_value`
-/// 
+///
 /// The primary use for this wrapper is to flip the kernel before conducting the convolution
 #[repr(transparent)]
-pub struct FlippedMatrix<M>(pub M);
+pub struct FlippedMatrix<'a, M>(pub &'a M);
 
-impl<M, T> Matrix<T> for FlippedMatrix<M>
+impl<'a, M, T> Matrix<T> for FlippedMatrix<'a, M>
 where
     M: Matrix<T>,
 {
@@ -49,37 +55,60 @@ where
     }
 }
 
-#[derive(Debug, Default, Clone, PartialEq)]
-pub struct OwnedMatrix<T> {
-    width: usize,
-    height: usize,
-    data: Vec<T>,
-}
+#[cfg(feature = "std")]
+pub mod std_dependent {
+    use super::{Matrix, MatrixMut};
+    use std::vec::Vec;
 
-impl<T> OwnedMatrix<T> {
-    pub fn new(width: usize, height: usize, data: Vec<T>) -> Option<Self> {
-        if width * height == data.len() {
-            Some(Self {
-                width,
-                height,
-                data,
-            })
-        } else {
-            None
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct OwnedMatrix<T> {
+        width: usize,
+        height: usize,
+        data: Vec<T>,
+    }
+
+    impl<T> OwnedMatrix<T> {
+        /// Create a new `OwnedMatrix` with the specified data
+        ///
+        /// Returns `None` if the length of the provided data is not `width * height`.
+        ///
+        /// # Example
+        /// ```
+        /// # use convolve2d::OwnedMatrix;
+        /// # use std::vec;
+        /// assert!(OwnedMatrix::new(2, 3, vec![0f64; 6]).is_some());
+        /// assert!(OwnedMatrix::new(2, 3, vec![0f64; 5]).is_none());
+        /// ```
+        pub fn new(width: usize, height: usize, data: Vec<T>) -> Option<Self> {
+            if width * height == data.len() {
+                Some(Self {
+                    width,
+                    height,
+                    data,
+                })
+            } else {
+                None
+            }
         }
     }
-}
 
-impl<T> Matrix<T> for OwnedMatrix<T> {
-    fn get_width(&self) -> usize {
-        self.width
+    impl<T> Matrix<T> for OwnedMatrix<T> {
+        fn get_width(&self) -> usize {
+            self.width
+        }
+
+        fn get_height(&self) -> usize {
+            self.height
+        }
+
+        fn get_data(&self) -> &[T] {
+            self.data.as_slice()
+        }
     }
 
-    fn get_height(&self) -> usize {
-        self.height
-    }
-
-    fn get_data(&self) -> &[T] {
-        self.data.as_slice()
+    impl<T> MatrixMut<T> for OwnedMatrix<T> {
+        fn get_data_mut(&mut self) -> &mut [T] {
+            self.data.as_mut_slice()
+        }
     }
 }
