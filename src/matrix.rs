@@ -1,5 +1,8 @@
 //! Definition of the [`Matrix`] trait
 
+#[cfg(feature = "std")]
+use std::prelude::v1::*;
+
 /// The `Matrix` trait provides an easily extendable interface for data in the program
 pub trait Matrix<T> {
     /// Get the width of the matrix
@@ -55,60 +58,135 @@ where
     }
 }
 
+/// A `Matrix` with a size known at compile time.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StaticMatrix<T, const N: usize> {
+    /// The number of columns in the matrix
+    pub width: usize,
+    /// The number of rows in the matrix
+    pub height: usize,
+    /// The set of all values in this matrix
+    pub data: [T; N],
+}
+
+impl<T, const N: usize> StaticMatrix<T, N> {
+    /// Create a new `StaticMatrix` with the specified dimensions.
+    ///
+    /// Returns `None` if the length of the provided data is not `width * height`
+    ///
+    /// # Example
+    /// ```
+    /// # use convolve2d::StaticMatrix;
+    /// assert!(StaticMatrix::new(2, 2, [1, 2, 3, 4]).is_some());
+    /// assert!(StaticMatrix::new(2, 3, [1, 2, 3, 4, 5]).is_none());
+    /// ```
+    pub fn new(width: usize, height: usize, data: [T; N]) -> Option<Self> {
+        if width * height == data.len() {
+            Some(Self {
+                width,
+                height,
+                data,
+            })
+        } else {
+            None
+        }
+    }
+}
+
+impl<T, const N: usize> Matrix<T> for StaticMatrix<T, N> {
+    fn get_width(&self) -> usize {
+        self.width
+    }
+
+    fn get_height(&self) -> usize {
+        self.height
+    }
+
+    fn get_data(&self) -> &[T] {
+        &self.data
+    }
+}
+
+impl<T, const N: usize> MatrixMut<T> for StaticMatrix<T, N> {
+    fn get_data_mut(&mut self) -> &mut [T] {
+        &mut self.data
+    }
+}
+
+/// A concrete implementation of `Matrix` for which the size is not known at compile time.
+///
+/// Requires the `"std"` feature to be enabled.
 #[cfg(feature = "std")]
-pub mod std_dependent {
-    use super::{Matrix, MatrixMut};
-    use std::vec::Vec;
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DynamicMatrix<T> {
+    /// The number of columns in the matrix
+    pub width: usize,
+    /// The number of rows in the matrix
+    pub height: usize,
+    /// The set of all values in this matrix
+    pub data: Vec<T>,
+}
 
-    #[derive(Debug, Clone, PartialEq)]
-    pub struct OwnedMatrix<T> {
-        width: usize,
-        height: usize,
-        data: Vec<T>,
-    }
-
-    impl<T> OwnedMatrix<T> {
-        /// Create a new `OwnedMatrix` with the specified data
-        ///
-        /// Returns `None` if the length of the provided data is not `width * height`.
-        ///
-        /// # Example
-        /// ```
-        /// # use convolve2d::OwnedMatrix;
-        /// # use std::vec;
-        /// assert!(OwnedMatrix::new(2, 3, vec![0f64; 6]).is_some());
-        /// assert!(OwnedMatrix::new(2, 3, vec![0f64; 5]).is_none());
-        /// ```
-        pub fn new(width: usize, height: usize, data: Vec<T>) -> Option<Self> {
-            if width * height == data.len() {
-                Some(Self {
-                    width,
-                    height,
-                    data,
-                })
-            } else {
-                None
-            }
+#[cfg(feature = "std")]
+impl<T> DynamicMatrix<T> {
+    /// Create a new `OwnedMatrix` with the specified data
+    ///
+    /// Returns `None` if the length of the provided data is not `width * height`.
+    ///
+    /// # Example
+    /// ```
+    /// # use convolve2d::DynamicMatrix;
+    /// # use std::vec;
+    /// assert!(DynamicMatrix::new(2, 3, vec![0f64; 6]).is_some());
+    /// assert!(DynamicMatrix::new(2, 3, vec![0f64; 5]).is_none());
+    /// ```
+    pub fn new(width: usize, height: usize, data: Vec<T>) -> Option<Self> {
+        if width * height == data.len() {
+            Some(Self {
+                width,
+                height,
+                data,
+            })
+        } else {
+            None
         }
     }
+}
 
-    impl<T> Matrix<T> for OwnedMatrix<T> {
-        fn get_width(&self) -> usize {
-            self.width
-        }
-
-        fn get_height(&self) -> usize {
-            self.height
-        }
-
-        fn get_data(&self) -> &[T] {
-            self.data.as_slice()
-        }
+#[cfg(feature = "std")]
+impl<T> Matrix<T> for DynamicMatrix<T> {
+    fn get_width(&self) -> usize {
+        self.width
     }
 
-    impl<T> MatrixMut<T> for OwnedMatrix<T> {
-        fn get_data_mut(&mut self) -> &mut [T] {
-            self.data.as_mut_slice()
-        }
+    fn get_height(&self) -> usize {
+        self.height
+    }
+
+    fn get_data(&self) -> &[T] {
+        self.data.as_slice()
+    }
+}
+
+#[cfg(feature = "std")]
+impl<T> MatrixMut<T> for DynamicMatrix<T> {
+    fn get_data_mut(&mut self) -> &mut [T] {
+        self.data.as_mut_slice()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FlippedMatrix;
+    use crate::{Matrix, StaticMatrix};
+
+    #[test]
+    fn flipped_matrix() {
+        let mat = StaticMatrix::new(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9]).unwrap();
+        let flipped = FlippedMatrix(&mat);
+        assert_eq!(flipped.get_value(0, 0), Some(&9));
+        assert_eq!(flipped.get_value(2, 1), Some(&2));
+        assert_eq!(flipped.get_value(0, 2), Some(&7));
+        assert_eq!(flipped.get_value(1, 1), Some(&5));
     }
 }
