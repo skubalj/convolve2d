@@ -5,7 +5,7 @@
 //! these will be able to be changed to [`StaticMatrix`]es, as their sizes can be checked at
 //! compile time.
 
-use crate::DynamicMatrix;
+use crate::{DynamicMatrix, StaticMatrix};
 use std::vec;
 
 /// Generate a Gaussian kernel with the specified standard deviation.
@@ -36,4 +36,64 @@ pub fn gaussian(size: usize, std_dev: f64) -> DynamicMatrix<f64> {
     }
 
     DynamicMatrix::new(size, size, data).unwrap()
+}
+
+/// A sobel filter that works in the X direction
+#[rustfmt::skip]
+pub fn sobel_x<T: From<i8>>() -> StaticMatrix<T, 9> {
+    StaticMatrix::new(
+        3,
+        3,
+        [
+            T::from(-1),  T::from(0),  T::from(1),
+            T::from(-2),  T::from(0),  T::from(2),
+            T::from(-1),  T::from(0),  T::from(1),
+        ],
+    )
+    .unwrap()
+}
+
+/// A sobel filter that works in the Y direction
+#[rustfmt::skip]
+pub fn sobel_y<T: From<i8>>() -> StaticMatrix<T, 9> {
+    StaticMatrix::new(
+        3,
+        3,
+        [
+            T::from(1),  T::from(2),  T::from(1),
+            T::from(0),  T::from(0),  T::from(0),
+            T::from(-1),  T::from(-2),  T::from(-1),
+        ],
+    )
+    .unwrap()
+}
+
+/// A laplacian filter that works in a cross 
+#[rustfmt::skip]
+pub fn laplacian_cross<T: From<i8>>() -> StaticMatrix<T, 9> {
+    StaticMatrix::new(
+        3,
+        3,
+        [
+            T::from(0),  T::from(-1),  T::from(0),
+            T::from(-1),  T::from(4),  T::from(-1),
+            T::from(0),  T::from(-1),  T::from(0),
+        ],
+    )
+    .unwrap()
+}
+
+/// A laplacian filter that takes pixel data from the diagonals as well.
+#[rustfmt::skip]
+pub fn laplacian_full<T: From<i8>>() -> StaticMatrix<T, 9> {
+    StaticMatrix::new(
+        3,
+        3,
+        [
+            T::from(-1),  T::from(-1),  T::from(-1),
+            T::from(-1),  T::from(8),  T::from(-1),
+            T::from(-1),  T::from(-1),  T::from(-1),
+        ],
+    )
+    .unwrap()
 }

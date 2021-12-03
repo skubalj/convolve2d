@@ -6,22 +6,18 @@ use std::time::Instant;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "GaussianBlur")]
 struct Args {
     #[structopt(name = "IMAGE")]
     image: String,
 
-    #[structopt(long, default_value = "5")]
-    size: usize,
-
-    #[structopt(long, default_value = "1.0")]
-    std_dev: f64,
+    #[structopt(name = "KERNEL")]
+    kernel: String,
 }
 
 fn main() {
-    let opt = Args::from_args();
+    let args = Args::from_args();
 
-    let img = ImageReader::open(opt.image)
+    let img = ImageReader::open(args.image)
         .expect("Unable to open image")
         .decode()
         .expect("Unable to decode image")
@@ -31,9 +27,15 @@ fn main() {
     let img_mat =
         DynamicMatrix::new(img.width() as usize, img.height() as usize, floating).unwrap();
 
-    let kg_start = Instant::now();
-    let kernel = kernel::gaussian(opt.size, opt.std_dev);
-    let kg_stop = Instant::now();
+    let kernel: StaticMatrix<f64, 9> = match args.kernel.as_str() {
+        "sobel_x" => kernel::sobel_x(),
+        "sobel_y" => kernel::sobel_y(),
+        "laplacian_cross" => kernel::laplacian_cross(),
+        "laplacian_full" => kernel::laplacian_full(),
+        _ => return,
+    };
+
+    let cv_start = Instant::now();
     let convolution = get_convolution(&img_mat, &kernel);
     let cv_stop = Instant::now();
 
@@ -48,11 +50,7 @@ fn main() {
         .expect("Unable to save image");
 
     println!(
-        "Kernel Generation Time: {:.3}ms",
-        kg_stop.sub(kg_start).as_secs_f64() * 1e3
-    );
-    println!(
         "Convolution Time: {:.3}ms",
-        cv_stop.sub(kg_stop).as_secs_f64() * 1e3
+        cv_stop.sub(cv_start).as_secs_f64() * 1e3
     );
 }
