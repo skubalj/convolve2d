@@ -1,6 +1,8 @@
+//! A simple demo to test different edge detection filters
+
 use convolve2d::*;
-use image::io::Reader as ImageReader;
-use image::RgbImage;
+#[cfg(feature = "image")]
+use image::{io::Reader as ImageReader, RgbImage};
 use std::ops::Sub;
 use std::time::Instant;
 use structopt::StructOpt;
@@ -14,6 +16,12 @@ struct Args {
     kernel: String,
 }
 
+#[cfg(not(feature = "image"))]
+fn main() {
+    println!("This demo requires the optional `image` flag. Rerun with `--all-features`");
+}
+
+#[cfg(feature = "image")]
 fn main() {
     let args = Args::from_args();
 

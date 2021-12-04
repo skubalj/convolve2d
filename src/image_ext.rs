@@ -1,4 +1,7 @@
-//! This module contains extensions to the `image` library to allow for greater compatibility
+//! This module contains extensions to the `image` library to allow for greater compatibility.
+//!
+//! Here, we define how `image` types are converted into our working types, and back out.
+
 #[cfg(feature = "std")]
 use crate::DynamicMatrix;
 use crate::SubPixels;
@@ -18,7 +21,7 @@ macro_rules! from_subpixels {
 
         impl<T: Primitive> From<$type<T>> for SubPixels<T, $n> {
             fn from(format: $type<T>) -> Self {
-                SubPixels(format.0)
+                format.0.into()
             }
         }
     )*}
@@ -46,9 +49,10 @@ where
     SP: 'static + Primitive,
 {
     fn from(buf: DynamicMatrix<SubPixels<SP, N>>) -> Self {
-        let vec = buf.data.into_iter().flat_map(|x| x.0).collect();
+        let (width, height, data) = buf.into_parts();
+        let vec = data.into_iter().flat_map(|x| x.0).collect();
         // This works, even though buf has been partially moved because of disjoint capture
-        ImageBuffer::from_vec(buf.width as u32, buf.height as u32, vec)
+        ImageBuffer::from_vec(width as u32, height as u32, vec)
             .expect("Unable to convert from DynamicMatrix to ImageBuffer")
     }
 }

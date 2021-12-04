@@ -1,3 +1,5 @@
+//! Definitions of the two convolution functions provided by the library
+
 use crate::matrix::{FlippedMatrix, Matrix, MatrixMut};
 use core::ops::{Add, Mul};
 #[cfg(feature = "rayon")]
@@ -34,6 +36,9 @@ where
 }
 /// Perform a 2D convolution on the specified image with the provided kernel, storing the result
 /// in the provided buffer.
+///
+/// The name of this function is meant to evoke memories of [`std::fmt::write`], which also takes
+/// a sink as an output parameter.
 pub fn write_convolution<T, K, O>(
     image: &impl Matrix<T>,
     kernel: &impl Matrix<K>,
@@ -73,6 +78,10 @@ pub fn write_convolution<T, K, O>(
 }
 
 /// Convert the provided alignment to padding and choke values.
+///
+/// If the provided alignment is positive, that implies that we need to pad our output stream. If
+/// the provided alignment is negative, that implies we need to choke up on our output stream,
+/// throwing away the first `n` elements.
 fn alignment_to_choke_padding(alignment: isize) -> (usize, usize) {
     // Use the alignment calculation to determine our choke and padding numbers
     let mut choke = 0;
@@ -85,6 +94,8 @@ fn alignment_to_choke_padding(alignment: isize) -> (usize, usize) {
     (choke, padding)
 }
 
+/// Update the output buffer, multiplying the image by the kernel value and adding it to the
+/// buffer at the specified alignment.
 #[cfg(not(feature = "rayon"))]
 fn update_buffer<T, K, O>(image: &[T], kernel_value: K, alignment: isize, buf: &mut [O])
 where
@@ -102,6 +113,8 @@ where
         .for_each(|(n, a)| *a = a.clone() + n)
 }
 
+/// Update the output buffer, multiplying the image by the kernel value and adding it to the
+/// buffer at the specified alignment.
 #[cfg(feature = "rayon")]
 fn update_buffer<T, K, O>(image: &[T], kernel_value: K, alignment: isize, buf: &mut [O])
 where
@@ -135,6 +148,19 @@ mod tests {
         let mut output = [0; 9];
         update_buffer(&image, 2u32, alignment, &mut output);
         assert_eq!(output, arr);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn convolve2d_smoke_test() {
+        let img = StaticMatrix::new(3, 3, [0, 0, 0, 0, 1, 0, 0, 0, 0]).unwrap();
+        let kernel = StaticMatrix::new(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9]).unwrap();
+
+        let output = crate::convolve2d(&img, &kernel);
+
+        let expected =
+            crate::DynamicMatrix::new(3, 3, std::vec![9, 8, 7, 6, 5, 4, 3, 2, 1]).unwrap();
+        assert_eq!(output, expected);
     }
 
     #[test]

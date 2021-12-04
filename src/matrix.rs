@@ -1,10 +1,18 @@
-//! Definition of the [`Matrix`] trait
+//! Definitions for the [`Matrix`] trait, and the concrete implementations provided by the library.
 
 use crate::SubPixels;
 #[cfg(feature = "std")]
 use std::prelude::v1::*;
 
 /// The `Matrix` trait provides an easily extendable interface for data in the program
+///
+/// # Extensibility
+/// To be able to feed your own types into the convolution functions, simply define an
+/// implementation of `Matrix` for your types.
+///
+/// Note that while `Matrix` makes no demands of its generic type `T`, in practice `T` must conform
+/// to the generic requirements of the convolution functions. ([`convolve2d`](crate::convolve2d)
+/// and [`write_convolution`](crate::write_convolution)).
 pub trait Matrix<T> {
     /// Get the width of the matrix
     fn get_width(&self) -> usize;
@@ -21,7 +29,12 @@ pub trait Matrix<T> {
     }
 }
 
-/// A subtype of [`Matrix`] allowing mutable access to the underlying data
+/// A subtype of [`Matrix`] allowing mutable access to the underlying data.
+///
+/// # Extensibility
+/// Implement this trait (in addition to `Matrix`) if you want to use one of your own types as the
+/// output buffer for [`write_convoution`](crate::write_convolution). This trait is not required
+/// if you only want to use your types as inputs.
 pub trait MatrixMut<T>: Matrix<T> {
     /// Get a mutable slice to the underlying matrix data
     fn get_data_mut(&mut self) -> &mut [T];
@@ -31,7 +44,7 @@ pub trait MatrixMut<T>: Matrix<T> {
 ///
 /// The primary use for this wrapper is to flip the kernel before conducting the convolution
 #[repr(transparent)]
-pub struct FlippedMatrix<'a, M>(pub &'a M);
+pub(crate) struct FlippedMatrix<'a, M>(pub &'a M);
 
 impl<'a, M, T> Matrix<T> for FlippedMatrix<'a, M>
 where
@@ -60,14 +73,24 @@ where
 }
 
 /// A `Matrix` with a size known at compile time.
+///
+/// The `StaticMatrix` type provides a simple, heap free way to use this library. However, it means
+/// that the size of the matrix has to be known at compile time. Additionally, as all matrix data
+/// is stored on the stack, copying a `StaticMatrix` can be a time consuming task. (This is why I
+/// chose to make `StaticMatrix` not implement `Clone`, even if `T` does.) The `std` feature
+/// provides access to the [`DynamicMatrix`], which will generally be easier to use.
+/// 
+/// However, even with the `std` feature enabled, you may find `StaticMatrix` to be handy for 
+/// defining kernels which have a known value at compile time. Many of the kernels in the 
+/// [`kernel`](crate::kernel) module use `StaticMatrix` for their implementation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StaticMatrix<T, const N: usize> {
     /// The number of columns in the matrix
-    pub width: usize,
+    width: usize,
     /// The number of rows in the matrix
-    pub height: usize,
+    height: usize,
     /// The set of all values in this matrix
-    pub data: [T; N],
+    data: [T; N],
 }
 
 impl<T, const N: usize> StaticMatrix<T, N> {
@@ -93,6 +116,22 @@ impl<T, const N: usize> StaticMatrix<T, N> {
         }
     }
 
+    /// Perform a 'map' operation on this matrix.
+    ///
+    /// Each element in the matrix body is given to the provided function, and the results are
+    /// aggregated into a new `StaticMatrix`. A common use for this function is to convert between
+    /// integers and floating point numbers.
+    ///
+    /// If your matrix's element type is `SubPixels`, then consider using
+    /// [`map_subpixels`](StaticMatrix::map_subpixels) to apply the operation to each subpixel,
+    /// rather than to each pixel group.
+    ///
+    /// # Example
+    /// ```
+    /// # use convolve2d::StaticMatrix;
+    /// let mat: StaticMatrix<u32, 4> = StaticMatrix::new(2, 2, [1, 2, 3, 4]).unwrap();
+    /// assert_eq!(mat.map(|x| x as f64), StaticMatrix::new(2, 2, [1.0, 2.0, 3.0, 4.0]).unwrap());
+    /// ```
     pub fn map<F, O>(self, operation: F) -> StaticMatrix<O, N>
     where
         F: Fn(T) -> O,
@@ -103,6 +142,15 @@ impl<T, const N: usize> StaticMatrix<T, N> {
             arr[i] = operation(x);
         }
         StaticMatrix::new(self.width, self.height, arr).unwrap()
+    }
+
+    /// Consume `self`, and return the width, height, and matrix data. (in that order).
+    ///
+    /// # Extensibility
+    /// This method is intended to be used to destructure a `StaticMatrix` into its fields so that
+    /// it can be converted cleanly to a user defined type.
+    pub fn into_parts(self) -> (usize, usize, [T; N]) {
+        (self.width, self.height, self.data)
     }
 }
 
@@ -142,16 +190,21 @@ impl<T, const N: usize> MatrixMut<T> for StaticMatrix<T, N> {
 
 /// A concrete implementation of `Matrix` for which the size is not known at compile time.
 ///
-/// Requires the `"std"` feature to be enabled.
+/// Requires the `"std"` feature to be enabled. If you're working without the standard library, 
+/// see [`StaticMatrix`].
+///
+/// The `DynamicMatrix` type is the preferred concrete implemenatation of `Matrix` that we provide,
+/// as it stores its data in a `Vec`. If you're building a matrix to do something, this should 
+/// probably be your first stop, especially if your matrix is large. 
 #[cfg(feature = "std")]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DynamicMatrix<T> {
     /// The number of columns in the matrix
-    pub width: usize,
+    width: usize,
     /// The number of rows in the matrix
-    pub height: usize,
+    height: usize,
     /// The set of all values in this matrix
-    pub data: Vec<T>,
+    data: Vec<T>,
 }
 
 #[cfg(feature = "std")]
@@ -179,9 +232,34 @@ impl<T> DynamicMatrix<T> {
         }
     }
 
+    /// Perform a 'map' operation on this matrix.
+    ///
+    /// Each element in the matrix body is given to the provided function, and the results are
+    /// aggregated into a new `DynamicMatrix`. A common use for this function is to convert between
+    /// integers and floating point numbers.
+    ///
+    /// If your matrix's element type is `SubPixels`, then consider using
+    /// [`map_subpixels`](DynamicMatrix::map_subpixels) to apply the operation to each subpixel,
+    /// rather than to each pixel group.
+    ///
+    /// # Example
+    /// ```
+    /// # use convolve2d::DynamicMatrix;
+    /// let mat: DynmicMatrix<u32, 4> = DynamicMatrix::new(2, 2, [1, 2, 3, 4]).unwrap();
+    /// assert_eq!(mat.map(|x| x as f64), DynamicMatrix::new(2, 2, [1.0, 2.0, 3.0, 4.0]).unwrap());
+    /// ```
     pub fn map<F: Fn(T) -> O, O>(self, operation: F) -> DynamicMatrix<O> {
         let arr = self.data.into_iter().map(operation).collect();
         DynamicMatrix::new(self.width, self.height, arr).unwrap()
+    }
+
+    /// Consume `self`, and return the width, height, and matrix data. (in that order).
+    ///
+    /// # Extensibility
+    /// This function is intended to be used to destructure the `DynamicMatrix` into something that
+    /// can be converted to a user defined type.
+    pub fn into_parts(self) -> (usize, usize, Vec<T>) {
+        (self.width, self.height, self.data)
     }
 }
 
