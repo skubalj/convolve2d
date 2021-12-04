@@ -1,5 +1,6 @@
 //! Definition of the [`Matrix`] trait
 
+use crate::SubPixels;
 #[cfg(feature = "std")]
 use std::prelude::v1::*;
 
@@ -91,6 +92,32 @@ impl<T, const N: usize> StaticMatrix<T, N> {
             None
         }
     }
+
+    pub fn map<F, O>(self, operation: F) -> StaticMatrix<O, N>
+    where
+        F: Fn(T) -> O,
+        O: Default + Copy,
+    {
+        let mut arr = [O::default(); N];
+        for (i, x) in self.data.into_iter().enumerate() {
+            arr[i] = operation(x);
+        }
+        StaticMatrix::new(self.width, self.height, arr).unwrap()
+    }
+}
+
+impl<T: Copy, const M: usize, const N: usize> StaticMatrix<SubPixels<T, N>, M> {
+    pub fn map_subpixels<F, O>(self, operation: F) -> StaticMatrix<SubPixels<O, N>, M>
+    where
+        F: Fn(T) -> O + Copy,
+        O: Default + Copy,
+    {
+        let mut arr = [SubPixels::default(); M];
+        for (i, x) in self.data.into_iter().enumerate() {
+            arr[i] = x.map(operation);
+        }
+        StaticMatrix::new(self.width, self.height, arr).unwrap()
+    }
 }
 
 impl<T, const N: usize> Matrix<T> for StaticMatrix<T, N> {
@@ -150,6 +177,23 @@ impl<T> DynamicMatrix<T> {
         } else {
             None
         }
+    }
+
+    pub fn map<F: Fn(T) -> O, O>(self, operation: F) -> DynamicMatrix<O> {
+        let arr = self.data.into_iter().map(operation).collect();
+        DynamicMatrix::new(self.width, self.height, arr).unwrap()
+    }
+}
+
+#[cfg(feature = "std")]
+impl<T: Copy, const N: usize> DynamicMatrix<SubPixels<T, N>> {
+    pub fn map_subpixels<F, O>(self, operation: F) -> DynamicMatrix<SubPixels<O, N>>
+    where
+        F: Fn(T) -> O + Copy,
+        O: Default + Copy,
+    {
+        let arr = self.data.into_iter().map(|sp| sp.map(operation)).collect();
+        DynamicMatrix::new(self.width, self.height, arr).unwrap()
     }
 }
 

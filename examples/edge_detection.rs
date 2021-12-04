@@ -1,6 +1,6 @@
 use convolve2d::*;
 use image::io::Reader as ImageReader;
-use image::GrayImage;
+use image::RgbImage;
 use std::ops::Sub;
 use std::time::Instant;
 use structopt::StructOpt;
@@ -17,15 +17,13 @@ struct Args {
 fn main() {
     let args = Args::from_args();
 
-    let img = ImageReader::open(args.image)
+    let img: DynamicMatrix<SubPixels<u8, 3>> = ImageReader::open(args.image)
         .expect("Unable to open image")
         .decode()
         .expect("Unable to decode image")
-        .into_luma8();
-
-    let floating = img.as_raw().iter().map(|&x| x as f64 / 255.0).collect();
-    let img_mat =
-        DynamicMatrix::new(img.width() as usize, img.height() as usize, floating).unwrap();
+        .into_rgb8()
+        .into();
+    let img = img.map_subpixels(|sp| sp as f64 / 255.0);
 
     let kernel: StaticMatrix<f64, 9> = match args.kernel.as_str() {
         "sobel_x" => kernel::sobel_x(),
@@ -36,16 +34,11 @@ fn main() {
     };
 
     let cv_start = Instant::now();
-    let convolution = get_convolution(&img_mat, &kernel);
+    let convolution = convolve2d(&img, &kernel);
     let cv_stop = Instant::now();
 
-    let out_vec = convolution
-        .get_data()
-        .iter()
-        .map(|x| (x * 255.0) as u8)
-        .collect();
-    GrayImage::from_vec(img.width(), img.height(), out_vec)
-        .unwrap()
+    let convolution = convolution.map_subpixels(|x| f64::round(x.abs() * 255.0) as u8);
+    RgbImage::from(convolution)
         .save("output.png")
         .expect("Unable to save image");
 

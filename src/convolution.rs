@@ -16,7 +16,7 @@ use std::vec;
 /// This function is a convient interface for the [`convolve2d`] function, which stores the
 /// generated convolution in a new allocation.
 #[cfg(feature = "std")]
-pub fn get_convolution<T, K, O>(image: &impl Matrix<T>, kernel: &impl Matrix<K>) -> DynamicMatrix<O>
+pub fn convolve2d<T, K, O>(image: &impl Matrix<T>, kernel: &impl Matrix<K>) -> DynamicMatrix<O>
 where
     T: Mul<K, Output = O> + Clone + Send + Sync,
     K: Clone + Send + Sync,
@@ -29,13 +29,12 @@ where
         vec![O::default(); allocation],
     )
     .unwrap();
-    convolve2d(image, kernel, &mut out);
+    write_convolution(image, kernel, &mut out);
     out
 }
-
 /// Perform a 2D convolution on the specified image with the provided kernel, storing the result
 /// in the provided buffer.
-pub fn convolve2d<T, K, O>(
+pub fn write_convolution<T, K, O>(
     image: &impl Matrix<T>,
     kernel: &impl Matrix<K>,
     out: &mut impl MatrixMut<O>,
@@ -123,7 +122,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::update_buffer;
-    use crate::{convolve2d, StaticMatrix};
+    use crate::{write_convolution, StaticMatrix};
     use test_case::test_case;
 
     #[test_case(-5, [12, 14, 16, 18, 0, 0, 0, 0, 0]; "alignment_n5")]
@@ -144,7 +143,7 @@ mod tests {
         let kernel = StaticMatrix::new(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9]).unwrap();
         let mut output = StaticMatrix::new(3, 3, [0; 9]).unwrap();
 
-        convolve2d(&img, &kernel, &mut output);
+        write_convolution(&img, &kernel, &mut output);
 
         let expected = StaticMatrix::new(3, 3, [9, 8, 7, 6, 5, 4, 3, 2, 1]).unwrap();
         assert_eq!(output, expected);
