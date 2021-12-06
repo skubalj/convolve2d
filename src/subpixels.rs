@@ -54,6 +54,14 @@ impl<T: Copy, const N: usize> SubPixels<T, N> {
         Ok(SubPixels(arr))
     }
 
+    /// Perform a map operation, applying the provided function to each subpixel.
+    /// 
+    /// # Example
+    /// ```
+    /// # use convolve2d::SubPixels;
+    /// let pixel = SubPixels([1, 2, 3]);
+    /// assert_eq!(pixel.map(|x| x + 1), SubPixels([2, 3, 4]));
+    /// ```
     pub fn map<F, O>(self, operation: F) -> SubPixels<O, N>
     where
         F: Fn(T) -> O,
@@ -78,7 +86,7 @@ impl<T: Add<Output = T> + Copy, const N: usize> Add for SubPixels<T, N> {
 
     fn add(mut self, rhs: Self) -> Self::Output {
         for (i, x) in rhs.0.into_iter().enumerate() {
-            self.0[i] = self.0[i].clone() + x;
+            self.0[i] = self.0[i] + x;
         }
         self
     }

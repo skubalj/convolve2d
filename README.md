@@ -7,6 +7,7 @@ This crate defines an *easy* and *extensible* way to conduct image convolutions,
 The purpose of `convolve2d` is to provide a single package that provides everything you need to 
 conduct image convolutions suitable for computer vision or image manipulation. Here's a breif 
 overview of what's on offer:
+
 * **Two convolution functions**: allowing you to pass your own buffer if speed is important, or 
   have a buffer allocated and returned for a more idiomatic interface.
 
@@ -80,6 +81,10 @@ Thanks to the following packages!
 | [`test-case`](https://crates.io/crates/test-case) | Wojciech Polak, Luke Biel | MIT               |
 
 And to the Rust community at large!
+
+## Contributions:
+Is something not clear? Do we need another kernel type? This library came about as a personal
+project, but feel free to submit issues or PRs on GitLab!
 
 ## License:
 This crate is released under the terms of the MIT License. 

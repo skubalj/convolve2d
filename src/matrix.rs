@@ -4,7 +4,7 @@ use crate::SubPixels;
 #[cfg(feature = "std")]
 use std::prelude::v1::*;
 
-/// The `Matrix` trait provides an easily extendable interface for data in the program
+/// An easily implementable interface for types that can be used in a convolution.
 ///
 /// # Extensibility
 /// To be able to feed your own types into the convolution functions, simply define an
@@ -13,6 +13,10 @@ use std::prelude::v1::*;
 /// Note that while `Matrix` makes no demands of its generic type `T`, in practice `T` must conform
 /// to the generic requirements of the convolution functions. ([`convolve2d`](crate::convolve2d)
 /// and [`write_convolution`](crate::write_convolution)).
+/// 
+/// Note that it is expected that the slice returned from `get_data` has length `width * height`.
+/// If this invariant is violated, you **are not** going to violate memory safety, but the result of
+/// the convolution **will most likely** be garbage.
 pub trait Matrix<T> {
     /// Get the width of the matrix
     fn get_width(&self) -> usize;
@@ -72,7 +76,7 @@ where
     }
 }
 
-/// A `Matrix` with a size known at compile time.
+/// A [`Matrix`] with a size known at compile time.
 ///
 /// The `StaticMatrix` type provides a simple, heap free way to use this library. However, it means
 /// that the size of the matrix has to be known at compile time. Additionally, as all matrix data
@@ -116,7 +120,7 @@ impl<T, const N: usize> StaticMatrix<T, N> {
         }
     }
 
-    /// Perform a 'map' operation on this matrix.
+    /// Perform a map operation on this matrix.
     ///
     /// Each element in the matrix body is given to the provided function, and the results are
     /// aggregated into a new `StaticMatrix`. A common use for this function is to convert between
@@ -211,9 +215,9 @@ impl<T, const N: usize> MatrixMut<T> for StaticMatrix<T, N> {
     }
 }
 
-/// A concrete implementation of `Matrix` for which the size is not known at compile time.
+/// A concrete implementation of [`Matrix`] for which the size is not known at compile time.
 ///
-/// Requires the `"std"` feature to be enabled. If you're working without the standard library, 
+/// Requires the `std` feature to be enabled. If you're working without the standard library, 
 /// see [`StaticMatrix`].
 ///
 /// The `DynamicMatrix` type is the preferred concrete implemenatation of `Matrix` that we provide,
@@ -232,7 +236,7 @@ pub struct DynamicMatrix<T> {
 
 #[cfg(feature = "std")]
 impl<T> DynamicMatrix<T> {
-    /// Create a new `OwnedMatrix` with the specified data
+    /// Create a new `DynamicMatrix` with the specified data
     ///
     /// Returns `None` if the length of the provided data is not `width * height`.
     ///
@@ -255,7 +259,7 @@ impl<T> DynamicMatrix<T> {
         }
     }
 
-    /// Perform a 'map' operation on this matrix.
+    /// Perform a map operation on this matrix.
     ///
     /// Each element in the matrix body is given to the provided function, and the results are
     /// aggregated into a new `DynamicMatrix`. A common use for this function is to convert between
