@@ -1,7 +1,6 @@
 //! A simple demo to test different edge detection filters
 
 use convolve2d::*;
-#[cfg(feature = "image")]
 use image::{io::Reader as ImageReader, RgbImage};
 use std::ops::Sub;
 use std::time::Instant;
@@ -16,12 +15,6 @@ struct Args {
     kernel: String,
 }
 
-#[cfg(not(feature = "image"))]
-fn main() {
-    println!("This demo requires the optional `image` flag. Rerun with `--all-features`");
-}
-
-#[cfg(feature = "image")]
 fn main() {
     let args = Args::from_args();
 
@@ -34,10 +27,10 @@ fn main() {
     let img = img.map_subpixels(|sp| sp as f64 / 255.0);
 
     let kernel: StaticMatrix<f64, 9> = match args.kernel.as_str() {
-        "sobel_x" => kernel::sobel_x(),
-        "sobel_y" => kernel::sobel_y(),
-        "laplacian_cross" => kernel::laplacian_cross(),
-        "laplacian_full" => kernel::laplacian_full(),
+        "sobel_x" => kernel::sobel::x(),
+        "sobel_y" => kernel::sobel::y(),
+        "laplacian_cross" => kernel::laplacian::cross(),
+        "laplacian_full" => kernel::laplacian::full(),
         _ => return,
     };
 

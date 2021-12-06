@@ -8,10 +8,28 @@ use core::ops::{Add, Mul};
 /// Instead of needing to divide the Red, Green, and Blue channels out so that each has its own
 /// image `Matrix`, using `SubPixels` gives you the ability to perform all three convolutions at
 /// once.
-#[derive(Debug, Clone, Copy)]
+/// 
+/// # Example
+/// ```
+/// # use convolve2d::SubPixels;
+/// let sp1 = SubPixels([1, 2, 3]);
+/// let sp2 = SubPixels([4, 5, 6]);
+/// 
+/// assert_eq!(sp1 * 2, SubPixels([2, 4, 6]));
+/// assert_eq!(sp1 + sp2, SubPixels([5, 7, 9]));
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SubPixels<T: Copy, const N: usize>(pub [T; N]);
 
 impl<T: Copy, const N: usize> SubPixels<T, N> {
+    /// Perform an infallible type conversion
+    ///
+    /// # Example
+    /// ```
+    /// # use convolve2d::SubPixels;
+    /// let pixel: SubPixels<u8, 3> = SubPixels([1, 2, 3]);
+    /// assert_eq!(pixel.convert::<f64>(), SubPixels([1.0, 2.0, 3.0]));
+    /// ```
     pub fn convert<U: From<T> + Copy + Default>(self) -> SubPixels<U, N> {
         let mut arr = [U::default(); N];
         for (a, n) in arr.iter_mut().zip(self.0) {
@@ -20,6 +38,14 @@ impl<T: Copy, const N: usize> SubPixels<T, N> {
         SubPixels(arr)
     }
 
+    /// Perform a fallible type conversion
+    ///
+    /// # Example
+    /// ```
+    /// # use convolve2d::SubPixels;
+    /// let pixel: SubPixels<u32, 3> = SubPixels([1, 2, 3]);
+    /// assert_eq!(pixel.try_convert::<u8>(), Ok(SubPixels([1, 2, 3])));
+    /// ```
     pub fn try_convert<U: TryFrom<T> + Copy + Default>(self) -> Result<SubPixels<U, N>, U::Error> {
         let mut arr = [U::default(); N];
         for (a, n) in arr.iter_mut().zip(self.0) {

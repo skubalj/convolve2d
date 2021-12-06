@@ -2,7 +2,7 @@
 ========================================
 
 This crate defines an *easy* and *extensible* way to conduct image convolutions, in a way that is 
-*dependency free*, and works with `no_std`. Sound cool? Read on!
+*free of system dependencies*, and works with `no_std`. Sound cool? Read on!
 
 The purpose of `convolve2d` is to provide a single package that provides everything you need to 
 conduct image convolutions suitable for computer vision or image manipulation. Here's a breif 
@@ -23,7 +23,53 @@ overview of what's on offer:
 * **Kernel Generators**: The `kernel` module provides generation functions for a number of kernels
   commonly used in image processing.
 
-This library is still in the early phase of development, and there's more to come! Stay tuned!
+While other convolution libraries may be more efficient, using a faster algorithm, or running on the
+GPU, this library's main focus is providing a complete convolution experience that is portable and 
+easy to use.
+
+## Example:
+This example shows how easy it is to perform convolutions when using the extensions for the `image`
+library. (See the `image` feature)
+
+```rust
+use image::RgbImage;
+use convolve2d::*;
+
+// Simply use `into` to convert from an `ImageBuffer` to a `DynamicMatrix`.
+let image_buffer: RgbImage = ...;
+let img: DynamicMatrix<SubPixels<u8, 3>> = image_buffer.into();
+
+// Convert our color space to floating point, since our gaussian will be `f64`s
+let img: DynamicMatrix<SubPixels<f64, 3>> = img.map_subpixels(|sp| sp as f64 / 255.0);
+
+// Generate a 5x5 gaussian with standard deviation 2.0
+let kernel = kernel::gaussian(5, 2.0);
+
+// Perform the convolution, getting back a new `DynamicMatrix`
+let convolution = convolve2d(&img, &kernel);
+
+// Convert the color space back to 8-bit colors 
+let convolution = convolution.map_subpixels(|sp| f64::round(sp * 255.0) as u8);
+
+// Convert back into an `RgbImage` and save using the `image` library
+RgbImage::from(convolution).save("output.png").expect("Unable to save image");
+```
+
+## Features:
+
+The following features are supported:
+
+| Feature | Default | Description |
+| :------ | :------ | :---------- |
+| `std`   | Yes     | Allow access to the standard library, enabling the `DynamicMatrix` type. |
+| `rayon` | Yes     | Use rayon to compute convolutions in parallel.                           |
+| `image` | No      | Add extensions for interoperation with the `image` crate.                |
+| `full`  | No      | All features.                                                            |
+
+To use the library in `no_std` mode, simply disable all features: 
+```toml
+convolve2d = { version = "0.1.0", default-features = false }
+```
 
 ## Acknowledgment:
 Thanks to the following packages!

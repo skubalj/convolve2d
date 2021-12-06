@@ -130,7 +130,10 @@ impl<T, const N: usize> StaticMatrix<T, N> {
     /// ```
     /// # use convolve2d::StaticMatrix;
     /// let mat: StaticMatrix<u32, 4> = StaticMatrix::new(2, 2, [1, 2, 3, 4]).unwrap();
-    /// assert_eq!(mat.map(|x| x as f64), StaticMatrix::new(2, 2, [1.0, 2.0, 3.0, 4.0]).unwrap());
+    /// assert_eq!(
+    ///     mat.map(|x| x as f64),
+    ///     StaticMatrix::new(2, 2, [1.0, 2.0, 3.0, 4.0]).unwrap()
+    /// );
     /// ```
     pub fn map<F, O>(self, operation: F) -> StaticMatrix<O, N>
     where
@@ -155,6 +158,26 @@ impl<T, const N: usize> StaticMatrix<T, N> {
 }
 
 impl<T: Copy, const M: usize, const N: usize> StaticMatrix<SubPixels<T, N>, M> {
+    /// Perform a map operation on each of the individual subpixel elements in the matrix.
+    /// 
+    /// This function is a shortcut for calling [`StaticMatrix::map`], then calling 
+    /// [`SubPixels::map`] with the provided function.
+    /// 
+    /// # Example
+    /// ```
+    /// # use convolve2d::{StaticMatrix, SubPixels};
+    /// let mat = StaticMatrix::new(2, 2, [
+    ///     SubPixels([1, 2, 3]), SubPixels([4, 5, 6]), 
+    ///     SubPixels([7, 8, 9]), SubPixels([10, 11, 12])
+    /// ]).unwrap();
+    /// 
+    /// let expected = StaticMatrix::new(2, 2, [
+    ///     SubPixels([2, 4, 6]), SubPixels([8, 10, 12]), 
+    ///     SubPixels([14, 16, 18]), SubPixels([20, 22, 24])
+    /// ]).unwrap();
+    /// 
+    /// assert_eq!(mat.map_subpixels(|x| x * 2), expected);
+    /// ```
     pub fn map_subpixels<F, O>(self, operation: F) -> StaticMatrix<SubPixels<O, N>, M>
     where
         F: Fn(T) -> O + Copy,
@@ -245,8 +268,11 @@ impl<T> DynamicMatrix<T> {
     /// # Example
     /// ```
     /// # use convolve2d::DynamicMatrix;
-    /// let mat: DynmicMatrix<u32, 4> = DynamicMatrix::new(2, 2, [1, 2, 3, 4]).unwrap();
-    /// assert_eq!(mat.map(|x| x as f64), DynamicMatrix::new(2, 2, [1.0, 2.0, 3.0, 4.0]).unwrap());
+    /// let mat: DynamicMatrix<u32> = DynamicMatrix::new(2, 2, vec![1, 2, 3, 4]).unwrap();
+    /// assert_eq!(
+    ///     mat.map(|x| x as f64),
+    ///     DynamicMatrix::new(2, 2, vec![1.0, 2.0, 3.0, 4.0]).unwrap()
+    /// );
     /// ```
     pub fn map<F: Fn(T) -> O, O>(self, operation: F) -> DynamicMatrix<O> {
         let arr = self.data.into_iter().map(operation).collect();
@@ -265,6 +291,26 @@ impl<T> DynamicMatrix<T> {
 
 #[cfg(feature = "std")]
 impl<T: Copy, const N: usize> DynamicMatrix<SubPixels<T, N>> {
+    /// Perform a map operation on each of the individual subpixel elements in the matrix.
+    /// 
+    /// This function is a shortcut for calling [`DynamicMatrix::map`], then calling 
+    /// [`SubPixels::map`] with the provided function.
+    /// 
+    /// # Example
+    /// ```
+    /// # use convolve2d::{DynamicMatrix, SubPixels};
+    /// let mat = DynamicMatrix::new(2, 2, vec![
+    ///     SubPixels([1, 2, 3]), SubPixels([4, 5, 6]), 
+    ///     SubPixels([7, 8, 9]), SubPixels([10, 11, 12])
+    /// ]).unwrap();
+    /// 
+    /// let expected = DynamicMatrix::new(2, 2, vec![
+    ///     SubPixels([2, 4, 6]), SubPixels([8, 10, 12]), 
+    ///     SubPixels([14, 16, 18]), SubPixels([20, 22, 24])
+    /// ]).unwrap();
+    /// 
+    /// assert_eq!(mat.map_subpixels(|x| x * 2), expected);
+    /// ```
     pub fn map_subpixels<F, O>(self, operation: F) -> DynamicMatrix<SubPixels<O, N>>
     where
         F: Fn(T) -> O + Copy,

@@ -2,7 +2,6 @@
 //! kernels
 
 use convolve2d::*;
-#[cfg(feature = "image")]
 use image::{io::Reader as ImageReader, RgbImage};
 use std::time::Instant;
 use structopt::StructOpt;
@@ -20,12 +19,6 @@ struct Args {
     std_dev: f64,
 }
 
-#[cfg(not(feature = "image"))]
-fn main() {
-    println!("This demo requires the optional `image` flag. Rerun with `--all-features`");
-}
-
-#[cfg(feature = "image")]
 fn main() {
     let opt = Args::from_args();
 

@@ -34,11 +34,13 @@ where
     write_convolution(image, kernel, &mut out);
     out
 }
-/// Perform a 2D convolution on the specified image with the provided kernel, storing the result
-/// in the provided buffer.
+/// Write the convolution of the provided image and kernel into the specified buffer.
 ///
 /// The name of this function is meant to evoke memories of [`std::fmt::write`], which also takes
 /// a sink as an output parameter.
+/// 
+/// While this function avoids allocations, and is therefore slightly faster, you may prefer the
+/// [`convolve2d`] function 
 pub fn write_convolution<T, K, O>(
     image: &impl Matrix<T>,
     kernel: &impl Matrix<K>,
