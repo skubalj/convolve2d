@@ -13,7 +13,7 @@ use std::prelude::v1::*;
 /// Note that while `Matrix` makes no demands of its generic type `T`, in practice `T` must conform
 /// to the generic requirements of the convolution functions. ([`convolve2d`](crate::convolve2d)
 /// and [`write_convolution`](crate::write_convolution)).
-/// 
+///
 /// Note that it is expected that the slice returned from `get_data` has length `width * height`.
 /// If this invariant is violated, you **are not** going to violate memory safety, but the result of
 /// the convolution **will most likely** be garbage.
@@ -83,9 +83,9 @@ where
 /// is stored on the stack, copying a `StaticMatrix` can be a time consuming task. (This is why I
 /// chose to make `StaticMatrix` not implement `Clone`, even if `T` does.) The `std` feature
 /// provides access to the [`DynamicMatrix`], which will generally be easier to use.
-/// 
-/// However, even with the `std` feature enabled, you may find `StaticMatrix` to be handy for 
-/// defining kernels which have a known value at compile time. Many of the kernels in the 
+///
+/// However, even with the `std` feature enabled, you may find `StaticMatrix` to be handy for
+/// defining kernels which have a known value at compile time. Many of the kernels in the
 /// [`kernel`](crate::kernel) module use `StaticMatrix` for their implementation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StaticMatrix<T, const N: usize> {
@@ -163,23 +163,23 @@ impl<T, const N: usize> StaticMatrix<T, N> {
 
 impl<T: Copy, const M: usize, const N: usize> StaticMatrix<SubPixels<T, N>, M> {
     /// Perform a map operation on each of the individual subpixel elements in the matrix.
-    /// 
-    /// This function is a shortcut for calling [`StaticMatrix::map`], then calling 
+    ///
+    /// This function is a shortcut for calling [`StaticMatrix::map`], then calling
     /// [`SubPixels::map`] with the provided function.
-    /// 
+    ///
     /// # Example
     /// ```
     /// # use convolve2d::{StaticMatrix, SubPixels};
     /// let mat = StaticMatrix::new(2, 2, [
-    ///     SubPixels([1, 2, 3]), SubPixels([4, 5, 6]), 
+    ///     SubPixels([1, 2, 3]), SubPixels([4, 5, 6]),
     ///     SubPixels([7, 8, 9]), SubPixels([10, 11, 12])
     /// ]).unwrap();
-    /// 
+    ///
     /// let expected = StaticMatrix::new(2, 2, [
-    ///     SubPixels([2, 4, 6]), SubPixels([8, 10, 12]), 
+    ///     SubPixels([2, 4, 6]), SubPixels([8, 10, 12]),
     ///     SubPixels([14, 16, 18]), SubPixels([20, 22, 24])
     /// ]).unwrap();
-    /// 
+    ///
     /// assert_eq!(mat.map_subpixels(|x| x * 2), expected);
     /// ```
     pub fn map_subpixels<F, O>(self, operation: F) -> StaticMatrix<SubPixels<O, N>, M>
@@ -217,12 +217,12 @@ impl<T, const N: usize> MatrixMut<T> for StaticMatrix<T, N> {
 
 /// A concrete implementation of [`Matrix`] for which the size is not known at compile time.
 ///
-/// Requires the `std` feature to be enabled. If you're working without the standard library, 
+/// Requires the `std` feature to be enabled. If you're working without the standard library,
 /// see [`StaticMatrix`].
 ///
 /// The `DynamicMatrix` type is the preferred concrete implemenatation of `Matrix` that we provide,
-/// as it stores its data in a `Vec`. If you're building a matrix to do something, this should 
-/// probably be your first stop, especially if your matrix is large. 
+/// as it stores its data in a `Vec`. If you're building a matrix to do something, this should
+/// probably be your first stop, especially if your matrix is large.
 #[cfg(feature = "std")]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DynamicMatrix<T> {
@@ -296,23 +296,23 @@ impl<T> DynamicMatrix<T> {
 #[cfg(feature = "std")]
 impl<T: Copy, const N: usize> DynamicMatrix<SubPixels<T, N>> {
     /// Perform a map operation on each of the individual subpixel elements in the matrix.
-    /// 
-    /// This function is a shortcut for calling [`DynamicMatrix::map`], then calling 
+    ///
+    /// This function is a shortcut for calling [`DynamicMatrix::map`], then calling
     /// [`SubPixels::map`] with the provided function.
-    /// 
+    ///
     /// # Example
     /// ```
     /// # use convolve2d::{DynamicMatrix, SubPixels};
     /// let mat = DynamicMatrix::new(2, 2, vec![
-    ///     SubPixels([1, 2, 3]), SubPixels([4, 5, 6]), 
+    ///     SubPixels([1, 2, 3]), SubPixels([4, 5, 6]),
     ///     SubPixels([7, 8, 9]), SubPixels([10, 11, 12])
     /// ]).unwrap();
-    /// 
+    ///
     /// let expected = DynamicMatrix::new(2, 2, vec![
-    ///     SubPixels([2, 4, 6]), SubPixels([8, 10, 12]), 
+    ///     SubPixels([2, 4, 6]), SubPixels([8, 10, 12]),
     ///     SubPixels([14, 16, 18]), SubPixels([20, 22, 24])
     /// ]).unwrap();
-    /// 
+    ///
     /// assert_eq!(mat.map_subpixels(|x| x * 2), expected);
     /// ```
     pub fn map_subpixels<F, O>(self, operation: F) -> DynamicMatrix<SubPixels<O, N>>

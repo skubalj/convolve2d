@@ -8,13 +8,13 @@ use core::ops::{Add, Mul};
 /// Instead of needing to divide the Red, Green, and Blue channels out so that each has its own
 /// image `Matrix`, using `SubPixels` gives you the ability to perform all three convolutions at
 /// once.
-/// 
+///
 /// # Example
 /// ```
 /// # use convolve2d::SubPixels;
 /// let sp1 = SubPixels([1, 2, 3]);
 /// let sp2 = SubPixels([4, 5, 6]);
-/// 
+///
 /// assert_eq!(sp1 * 2, SubPixels([2, 4, 6]));
 /// assert_eq!(sp1 + sp2, SubPixels([5, 7, 9]));
 /// ```
@@ -55,7 +55,7 @@ impl<T: Copy, const N: usize> SubPixels<T, N> {
     }
 
     /// Perform a map operation, applying the provided function to each subpixel.
-    /// 
+    ///
     /// # Example
     /// ```
     /// # use convolve2d::SubPixels;

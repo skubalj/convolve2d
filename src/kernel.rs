@@ -5,16 +5,16 @@
 /// The current implementation requires the `"std"` feature flag. However, once complex expressions
 /// for const generics is stabilized, the `size` parameter can be a compile time constant checked
 /// by the type system.
-/// 
+///
 /// The output matrix of this function is normalized so that the sum is 1.
-/// 
+///
 /// # Example
 /// ```
 /// # use convolve2d::{DynamicMatrix, kernel};
 /// let k1 = kernel::gaussian(5, 1.0);
 /// let k2 = k1.map(|x| (x * 1000.0) as i32); // Convert into integers so we can use `==`
 /// assert_eq!(k2, DynamicMatrix::new(5, 5, vec![
-///      2, 13,  21, 13,  2, 
+///      2, 13,  21, 13,  2,
 ///     13, 59,  98, 59, 13,
 ///     21, 98, 162, 98, 21,
 ///     13, 59,  98, 59, 13,
@@ -47,11 +47,11 @@ pub fn gaussian(size: usize, std_dev: f64) -> crate::DynamicMatrix<f64> {
 }
 
 /// Generate a kernel used for box blur, normalized to 1.
-/// 
+///
 /// The current implementation requires the `"std"` feature flag. However, once complex expressions
 /// for const generics is stabilized, the `size` parameter can be a compile time constant checked
 /// by the type system.
-/// 
+///
 /// # Example
 /// ```
 /// # use convolve2d::{DynamicMatrix, kernel};

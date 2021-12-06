@@ -38,9 +38,9 @@ where
 ///
 /// The name of this function is meant to evoke memories of [`std::fmt::write`], which also takes
 /// a sink as an output parameter.
-/// 
+///
 /// While this function avoids allocations, and is therefore slightly faster, you may prefer the
-/// [`convolve2d`] function 
+/// [`convolve2d`] function
 pub fn write_convolution<T, K, O>(
     image: &impl Matrix<T>,
     kernel: &impl Matrix<K>,

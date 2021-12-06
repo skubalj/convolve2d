@@ -83,8 +83,8 @@ Thanks to the following packages!
 And to the Rust community at large!
 
 ## Contributions:
-Is something not clear? Do we need another kernel type? This library came about as a personal
-project, but feel free to submit issues or PRs on GitLab!
+Is something not clear in the documentation? Do we need another kernel type? This library came about
+as a personal project, but feel free to submit issues or PRs on GitLab!
 
 ## License:
 This crate is released under the terms of the MIT License. 
