@@ -1,4 +1,8 @@
 //! Definitions for various kernels that can be generated automatically.
+//! 
+//! The gaussian and box blur filters can be used to blur images while the sobel and laplacian 
+//! filters are commonly used for edge detection. See the documentation on each function for more
+//! detail.
 
 /// Generate a Gaussian kernel with the specified standard deviation.
 ///

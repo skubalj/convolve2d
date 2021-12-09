@@ -5,6 +5,11 @@ use crate::SubPixels;
 use std::prelude::v1::*;
 
 /// An easily implementable interface for types that can be used in a convolution.
+/// 
+/// This library comes with two concrete implementations of `Matrix`: [`StaticMatrix`], which uses
+/// a statically sized, stack allocated array as its backing data structure, and [`DynamicMatrix`],
+/// which uses a `Vec` under the hood. However, you should feel free to implement `Matrix` for your
+/// own types as well.
 ///
 /// # Extensibility
 /// To be able to feed your own types into the convolution functions, simply define an
@@ -15,8 +20,8 @@ use std::prelude::v1::*;
 /// and [`write_convolution`](crate::write_convolution)).
 ///
 /// Note that it is expected that the slice returned from `get_data` has length `width * height`.
-/// If this invariant is violated, you **are not** going to violate memory safety, but the result of
-/// the convolution **will most likely** be garbage.
+/// If this invariant is violated, you **are not** going to violate memory safety, but attempting
+/// to run a convolution will either result in a panic, or having garbage returned as output.
 pub trait Matrix<T> {
     /// Get the width of the matrix
     fn get_width(&self) -> usize;
@@ -24,7 +29,10 @@ pub trait Matrix<T> {
     /// Get the height of the matrix
     fn get_height(&self) -> usize;
 
-    /// Retrieve the data stored in this matrix
+    /// Retrieve the data stored in this matrix.
+    /// 
+    /// It is expected that the length of the returned slice will be `get_width() * get_height()`. 
+    /// Failure to meet this invariant may result in panics with the `Matrix` is used.
     fn get_data(&self) -> &[T];
 
     /// Get the value stored at the given row and column of the matrix
@@ -151,7 +159,7 @@ impl<T, const N: usize> StaticMatrix<T, N> {
         StaticMatrix::new(self.width, self.height, arr).unwrap()
     }
 
-    /// Consume `self`, and return the width, height, and matrix data. (in that order).
+    /// Consume `self`, and return the width, height, and matrix data (in that order).
     ///
     /// # Extensibility
     /// This method is intended to be used to destructure a `StaticMatrix` into its fields so that

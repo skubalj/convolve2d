@@ -15,8 +15,40 @@ use std::vec;
 
 /// Perform a 2D convolution on the specified image with the provided kernel.
 ///
-/// This function is a convient interface for the [`convolve2d`] function, which stores the
-/// generated convolution in a new allocation.
+/// This function is a convient interface for the [`write_convolution`] function, automatically 
+/// generating a new allocation in which to store the convolution. In most cases, this function 
+/// should be preferred, as it is the more idiomatic implemntation. However, in higher performance
+/// scenarios, or in contexts in which greater control is needed, `write_convolution` may still be
+/// useful
+/// 
+/// Naturally, as this function uses the `DynamicMatrix` type, it requires the `std` feature. 
+///
+/// # Example
+/// ```
+/// use convolve2d::{convolve2d, DynamicMatrix};
+/// let mat = DynamicMatrix::new(3, 3, vec![
+///     0, 0, 0,
+///     0, 1, 0,
+///     0, 0, 0,
+/// ]).unwrap();
+///
+/// let kernel = DynamicMatrix::new(3, 3, vec![
+///     1, 2, 3,
+///     4, 5, 6,
+///     7, 8, 9,
+/// ]).unwrap();
+///
+/// let output = convolve2d(&mat, &kernel);
+/// assert_eq!(output, DynamicMatrix::new(3, 3, vec![9, 8, 7, 6, 5, 4, 3, 2, 1]).unwrap());
+/// ```
+///
+/// # Panics
+/// If the kernel's `get_value` method does not return `Some` for all row and column values in the
+/// ranges `0..kenrel.get_height()` and `0..kernel.get_width()`.
+///
+/// Why should this panic? It would be easy to return a `Result` instead, but having `get_value`
+/// fail to return a value when we expect it to be valid indicates a programming failure, rather
+/// than a simple error in execution.
 #[cfg(feature = "std")]
 pub fn convolve2d<T, K, O>(image: &impl Matrix<T>, kernel: &impl Matrix<K>) -> DynamicMatrix<O>
 where
@@ -34,13 +66,42 @@ where
     write_convolution(image, kernel, &mut out);
     out
 }
+
 /// Write the convolution of the provided image and kernel into the specified buffer.
 ///
 /// The name of this function is meant to evoke memories of [`std::fmt::write`], which also takes
 /// a sink as an output parameter.
 ///
 /// While this function avoids allocations, and is therefore slightly faster, you may prefer the
-/// [`convolve2d`] function
+/// [`convolve2d`] function for a more idiomatic approach.
+///
+/// # Example
+/// ```
+/// use convolve2d::{write_convolution, StaticMatrix};
+/// let mat = StaticMatrix::new(3, 3, [
+///     0, 0, 0,
+///     0, 1, 0,
+///     0, 0, 0,
+/// ]).unwrap();
+///
+/// let kernel = StaticMatrix::new(3, 3, [
+///     1, 2, 3,
+///     4, 5, 6,
+///     7, 8, 9,
+/// ]).unwrap();
+///
+/// let mut output = StaticMatrix::new(3, 3, [0; 9]).unwrap();
+/// write_convolution(&mat, &kernel, &mut output);
+/// assert_eq!(output, StaticMatrix::new(3, 3, [9, 8, 7, 6, 5, 4, 3, 2, 1]).unwrap());
+/// ```
+///
+/// # Panics
+/// If the kernel's `get_value` method does not return `Some` for all row and column values in the
+/// ranges `0..kenrel.get_height()` and `0..kernel.get_width()`.
+///
+/// Why should this panic? It would be easy to return a `Result` instead, but having `get_value`
+/// fail to return a value when we expect it to be valid indicates a programming failure, rather
+/// than a simple error in execution.
 pub fn write_convolution<T, K, O>(
     image: &impl Matrix<T>,
     kernel: &impl Matrix<K>,

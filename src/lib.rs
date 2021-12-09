@@ -11,7 +11,7 @@
 //! * **Traits**: Convolution is defined generically across the [`Matrix`] trait. If you have a
 //!   custom image type, simply define an implementation of `Matrix`, and you're good to go!
 //!
-//! * **Built-in `image` Support**: We also offer support for the `image` library, through a feature
+//! * **Built-in `image` Support**: We also offer support for the `image` library through a feature
 //!   flag (disabled by default), allowing you to seamlessly use the types you're already used to!
 //!
 //! * **`rayon`**: Compute convolutions in parallel using the `rayon` flag. (Enabled by default)

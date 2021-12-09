@@ -58,8 +58,8 @@ where
 {
     fn from(buf: ImageBuffer<P, Vec<P::Subpixel>>) -> Self {
         let subpixel_data = buf.pixels().map(|&x| x.into()).collect();
-        Self::new(buf.width() as usize, buf.height() as usize, subpixel_data)
-            .expect("Failed to convert image into DynamicMatrix")
+        // `unwrap` is safe here because `ImageBuffer` ensures the size is correct.
+        Self::new(buf.width() as usize, buf.height() as usize, subpixel_data).unwrap()
     }
 }
 
@@ -73,7 +73,7 @@ where
         let (width, height, data) = buf.into_parts();
         let vec = data.into_iter().flat_map(|x| x.0).collect();
         // This works, even though buf has been partially moved because of disjoint capture
-        ImageBuffer::from_vec(width as u32, height as u32, vec)
-            .expect("Unable to convert from DynamicMatrix to ImageBuffer")
+        // `unwrap` is safe here, because `DynamicMatrix`'s size is checked on creation
+        ImageBuffer::from_vec(width as u32, height as u32, vec).unwrap()
     }
 }
