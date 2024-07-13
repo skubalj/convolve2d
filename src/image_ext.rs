@@ -6,7 +6,7 @@
 use crate::DynamicMatrix;
 use crate::{Matrix, SubPixels};
 use core::ops::Deref;
-use image::{Bgr, Bgra, ImageBuffer, Luma, LumaA, Pixel, Primitive, Rgb, Rgba};
+use image::{ImageBuffer, Luma, LumaA, Pixel, Primitive, Rgb, Rgba};
 #[cfg(feature = "std")]
 use std::prelude::v1::*;
 
@@ -28,7 +28,7 @@ macro_rules! from_subpixels {
     )*}
 }
 
-from_subpixels! {Bgr, 3; Bgra, 4; Luma, 1; LumaA, 2; Rgb, 3; Rgba, 4;}
+from_subpixels! {Luma, 1; LumaA, 2; Rgb, 3; Rgba, 4;}
 
 /// An implementation of [`Matrix`] for grayscale ImageBuffers. This works because each pixel is
 /// one element in the underlying container.

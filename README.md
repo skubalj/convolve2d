@@ -88,6 +88,7 @@ Thanks to the following packages!
 | :------------------------------------------------ | :------------------------ | :---------------- |
 | [`image`](https://crates.io/crates/image)         | HeroicKatora, fintelia    | MIT               |
 | [`rayon`](https://crates.io/crates/rayon)         | Josh Stone, Niko Matsakis | Apache 2.0 or MIT |
+| [`clap`](https://crates.io/crates/clap)           | Kevin K & Maintainers     | Apache 2.0 or MIT |
 | [`test-case`](https://crates.io/crates/test-case) | Wojciech Polak, Luke Biel | MIT               |
 
 And to the Rust community at large!

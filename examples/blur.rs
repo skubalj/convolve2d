@@ -4,23 +4,22 @@
 use convolve2d::*;
 use image::{io::Reader as ImageReader, RgbImage};
 use std::time::Instant;
-use structopt::StructOpt;
+use clap::Parser;
 
-#[derive(StructOpt, Debug)]
-#[structopt(name = "GaussianBlur")]
+#[derive(Parser, Debug)]
+#[command(version, about)]
 struct Args {
-    #[structopt(name = "IMAGE")]
-    image: String,
-
-    #[structopt(long, default_value = "5")]
+    #[arg(long, default_value = "5")]
     size: usize,
-
-    #[structopt(long, default_value = "1.0")]
+    
+    #[arg(long, default_value = "1.0")]
     std_dev: f64,
+
+    image: String,
 }
 
 fn main() {
-    let opt = Args::from_args();
+    let opt = Args::parse();
 
     let img: DynamicMatrix<SubPixels<u8, 3>> = ImageReader::open(opt.image)
         .expect("Unable to open image")

@@ -1,22 +1,19 @@
 //! A simple demo to test different edge detection filters
 
+use clap::Parser;
 use convolve2d::*;
 use image::{io::Reader as ImageReader, GrayImage};
 use std::ops::Sub;
 use std::time::Instant;
-use structopt::StructOpt;
 
-#[derive(StructOpt, Debug)]
+#[derive(Parser, Debug)]
 struct Args {
-    #[structopt(name = "IMAGE")]
     image: String,
-
-    #[structopt(name = "KERNEL")]
     kernel: String,
 }
 
 fn main() {
-    let args = Args::from_args();
+    let args = Args::parse();
 
     let img: DynamicMatrix<SubPixels<u8, 1>> = ImageReader::open(args.image)
         .expect("Unable to open image")

@@ -16,12 +16,14 @@ keywords = ["convolution", "convolve", "image"]
 default = ["std", "rayon"]
 std = []
 full = ["std", "rayon", "image"]
+image = ["dep:image"]
+rayon = ["dep:rayon"]
 
 [dependencies]
-image = { version = "0.23.14", optional = true }
-rayon = { version = "1.5.1", optional = true }
+image = { version = "0.25.1", optional = true }
+rayon = { version = "1.10.0", optional = true }
 
 [dev-dependencies]
 convolve2d = { path = ".", features = ["full"] }  # Get all features for examples
-structopt = "0.3.25"  # Used to parse arguments for examples
+clap = { version = "4.5.9", features=["derive"] } # Used to parse arguments for examples
 test-case = "1.2.1"
