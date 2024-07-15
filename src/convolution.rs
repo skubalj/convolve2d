@@ -150,7 +150,7 @@ fn alignment_to_choke_padding(alignment: isize) -> (usize, usize) {
     let mut choke = 0;
     let mut padding = 0;
     if alignment < 0 {
-        choke = alignment.abs() as usize;
+        choke = alignment.unsigned_abs();
     } else {
         padding = alignment as usize;
     }
