@@ -69,7 +69,7 @@ The following features are supported:
 
 To use the library in `no_std` mode, simply disable all features: 
 ```toml
-convolve2d = { version = "0.1.0", default-features = false }
+convolve2d = { version = "0.3.0", default-features = false }
 ```
 
 ## Notes on `image` Compatibility
@@ -95,9 +95,9 @@ And to the Rust community at large!
 
 ## Contributions:
 Is something not clear in the documentation? Do we need another kernel type? This library came about
-as a personal project, but feel free to submit issues or PRs on GitLab!
+as a personal project, but feel free to submit issues or PRs on GitHub!
 
 ## License:
 This crate is released under the terms of the MIT License. 
 
-Copyright (C) 2021 Joseph Skubal
+Copyright (C) 2021-2025 Joseph Skubal
