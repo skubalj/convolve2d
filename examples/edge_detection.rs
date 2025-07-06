@@ -1,15 +1,35 @@
 //! A simple demo to test different edge detection filters
 
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use convolve2d::*;
-use image::{io::Reader as ImageReader, GrayImage};
+use image::{GrayImage, ImageReader};
+use std::fmt::Display;
 use std::ops::Sub;
 use std::time::Instant;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+enum Kernel {
+    SobelX,
+    SobelY,
+    LaplacianCross,
+    LaplacianFull,
+}
+
+impl Display for Kernel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::SobelX => write!(f, "sobel_x"),
+            Self::SobelY => write!(f, "sobel_y"),
+            Self::LaplacianCross => write!(f, "laplacian_cross"),
+            Self::LaplacianFull => write!(f, "laplacian_full"),
+        }
+    }
+}
 
 #[derive(Parser, Debug)]
 struct Args {
     image: String,
-    kernel: String,
+    kernel: Kernel,
 }
 
 fn main() {
@@ -23,12 +43,11 @@ fn main() {
         .into();
     let img = img.map_subpixels(|sp| sp as i32);
 
-    let kernel: StaticMatrix<i32, 9> = match args.kernel.as_str() {
-        "sobel_x" => kernel::sobel::x(),
-        "sobel_y" => kernel::sobel::y(),
-        "laplacian_cross" => kernel::laplacian::cross(),
-        "laplacian_full" => kernel::laplacian::full(),
-        _ => return,
+    let kernel: StaticMatrix<i32, 9> = match args.kernel {
+        Kernel::SobelX => kernel::sobel::x(),
+        Kernel::SobelY => kernel::sobel::y(),
+        Kernel::LaplacianCross => kernel::laplacian::cross(),
+        Kernel::LaplacianFull => kernel::laplacian::full(),
     };
 
     let cv_start = Instant::now();

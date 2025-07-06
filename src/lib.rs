@@ -21,7 +21,7 @@
 //! * **Kernel Generators**: The [`kernel`] module provides generation functions for a number of
 //!   kernels commonly used in image processing.
 //!
-//! While other convolution libraries may be more efficient, using a faster algorithm, or running
+//! While other convolution libraries may be more efficient, use a faster algorithm, or run
 //! on the GPU, this library's main focus is providing a complete convolution experience that is
 //! portable and easy to use.
 //!
@@ -38,7 +38,7 @@
 //!
 //! To use the library in `no_std` mode, simply disable all features:
 //! ```toml
-//! convolve2d = { version = "0.1.0", default-features = false }
+//! convolve2d = { version = "0.3.0", default-features = false }
 //! ```
 //!
 //! # Notes on `image` Compatibility
@@ -71,10 +71,58 @@ mod subpixels;
 pub mod kernel;
 
 pub use crate::{
-    convolution::write_convolution,
+    convolution::{write_convolution, write_convolution_saturating},
     matrix::{Matrix, MatrixMut, StaticMatrix},
     subpixels::SubPixels,
 };
 
 #[cfg(feature = "std")]
-pub use crate::{convolution::convolve2d, matrix::DynamicMatrix};
+pub use crate::{
+    convolution::{convolve2d, convolve2d_saturating},
+    matrix::DynamicMatrix,
+};
+
+/// A trait for types that can add without overflowing
+pub trait SaturatingAdd<Rhs = Self> {
+    /// The resulting type after applying addition
+    type Output;
+
+    /// Add `other` to `rhs`, without overflowing
+    fn saturating_add(self, rhs: Rhs) -> Self::Output;
+}
+
+/// A trait for types that can be multiplied without overflowing
+pub trait SaturatingMul<Rhs = Self> {
+    /// The resulting type after applying multiplication
+    type Output;
+
+    /// Multiply `self` by `rhs`, without overflowing
+    fn saturating_mul(self, rhs: Rhs) -> Self::Output;
+}
+
+macro_rules! saturating_impl {
+    ($($t:ty),+) => {
+        $(
+            impl SaturatingAdd<$t> for $t {
+                type Output = Self;
+
+                #[inline]
+                fn saturating_add(self, v: Self) -> Self {
+                    <$t>::saturating_add(self, v)
+                }
+            }
+
+            impl SaturatingMul<$t> for $t {
+                type Output = Self;
+
+                #[inline]
+                fn saturating_mul(self, v: Self) -> Self {
+                    <$t>::saturating_mul(self, v)
+                }
+            }
+        )+
+    };
+}
+
+saturating_impl!(u8, u16, u32, u64, u128, usize);
+saturating_impl!(i8, i16, i32, i64, i128, isize);

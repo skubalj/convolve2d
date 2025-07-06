@@ -1,17 +1,17 @@
 //! A simple demo to test the gaussian generation function and benchmark convolutions with large
 //! kernels
 
-use convolve2d::*;
-use image::{io::Reader as ImageReader, RgbImage};
-use std::time::Instant;
 use clap::Parser;
+use convolve2d::*;
+use image::{ImageReader, RgbImage};
+use std::time::Instant;
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Args {
     #[arg(long, default_value = "5")]
     size: usize,
-    
+
     #[arg(long, default_value = "1.0")]
     std_dev: f64,
 

@@ -1,9 +1,10 @@
+use crate::{SaturatingAdd, SaturatingMul};
 use core::ops::{Add, Mul};
 
 /// A collection of subpixels that should make working with multi-channeled images more convenient.
 ///
-/// This struct implements both `Add` and `Mul`, so that it can be used as the data type for a
-/// [`Matrix`](crate::Matrix)
+/// This struct implements both `Add` and `Mul` so that it can be used as the data type for a
+/// [`Matrix`](crate::Matrix).
 ///
 /// Instead of needing to divide the Red, Green, and Blue channels out so that each has its own
 /// image `Matrix`, using `SubPixels` gives you the ability to perform all three convolutions at
@@ -92,6 +93,17 @@ impl<T: Add<Output = T> + Copy, const N: usize> Add for SubPixels<T, N> {
     }
 }
 
+impl<T: SaturatingAdd<Output = T> + Copy, const N: usize> SaturatingAdd for SubPixels<T, N> {
+    type Output = Self;
+
+    fn saturating_add(mut self, rhs: Self) -> Self::Output {
+        for (i, x) in rhs.0.into_iter().enumerate() {
+            self.0[i] = self.0[i].saturating_add(x);
+        }
+        self
+    }
+}
+
 impl<T, C, O, const N: usize> Mul<C> for SubPixels<T, N>
 where
     C: Copy,
@@ -111,8 +123,60 @@ where
     }
 }
 
+impl<T, C, O, const N: usize> SaturatingMul<C> for SubPixels<T, N>
+where
+    C: Copy,
+    T: SaturatingMul<C, Output = O> + Copy,
+    O: Default + Copy,
+{
+    type Output = SubPixels<O, N>;
+
+    fn saturating_mul(self, rhs: C) -> Self::Output {
+        let mut arr = [O::default(); N];
+        self.0
+            .into_iter()
+            .map(|a| a.saturating_mul(rhs))
+            .enumerate()
+            .for_each(|(i, v)| arr[i] = v);
+        SubPixels(arr)
+    }
+}
+
 impl<T: Copy + Default, const N: usize> Default for SubPixels<T, N> {
     fn default() -> Self {
         Self([T::default(); N])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{SaturatingAdd, SaturatingMul};
+
+    use super::SubPixels;
+
+    #[test]
+    fn test_add() {
+        let p1 = SubPixels([1, 2, 3, 4]);
+        let p2 = SubPixels([1, 2, 3, 4]);
+        assert_eq!(p1 + p2, SubPixels([2, 4, 6, 8]))
+    }
+
+    #[test]
+    fn test_saturating_add() {
+        let p1 = SubPixels::<u8, 4>([0, 1, 254, 255]);
+        let p2 = SubPixels::<u8, 4>([1, 255, 1, 5]);
+        assert_eq!(p1.saturating_add(p2), SubPixels([1, 255, 255, 255]));
+    }
+
+    #[test]
+    fn test_mul() {
+        let p1 = SubPixels([1, 2, 3, 4]);
+        assert_eq!(p1 * 5, SubPixels([5, 10, 15, 20]))
+    }
+
+    #[test]
+    fn test_saturating_mul() {
+        let p1 = SubPixels::<u8, 4>([2, 8, 32, 128]);
+        assert_eq!(p1.saturating_mul(8), SubPixels([16, 64, 255, 255]))
     }
 }

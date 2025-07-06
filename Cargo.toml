@@ -1,6 +1,6 @@
 [package]
 name = "convolve2d"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Joseph Skubal"]
 edition = "2021"
 repository = "https://github.com/skubalj/convolve2d"
@@ -20,10 +20,10 @@ image = ["dep:image"]
 rayon = ["dep:rayon"]
 
 [dependencies]
-image = { version = "0.25.1", optional = true }
+image = { version = "0.25.6", optional = true }
 rayon = { version = "1.10.0", optional = true }
 
 [dev-dependencies]
 convolve2d = { path = ".", features = ["full"] }  # Get all features for examples
-clap = { version = "4.5.9", features=["derive"] } # Used to parse arguments for examples
+clap = { version = "4.5.9", features= ["derive"] } # Used to parse arguments for examples
 test-case = "1.2.1"
